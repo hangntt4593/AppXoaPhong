@@ -33,4 +33,6 @@ if uploaded_file is not None:
     buf = io.BytesIO()
     output_image.save(buf, format="PNG")
     byte_im = buf.getvalue()
+
     st.download_button("Tải ảnh về", byte_im, "xoa_phong_isnet.png", "image/png")
+
