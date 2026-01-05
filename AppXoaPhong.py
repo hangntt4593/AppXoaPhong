@@ -1,15 +1,11 @@
 import streamlit as st
-from rembg import remove, new_session # <--- Nhớ thêm new_session vào đây
+# Bỏ new_session đi, dùng lại cái mặc định
+from rembg import remove 
 from PIL import Image
 import io
 
-st.set_page_config(page_title="App Xóa Phông Pro", page_icon="✂️")
-st.title("✂️ Xóa Phông (Model IS-Net)")
-
-# 1. Tải trước bộ não xịn (IS-Net)
-# Lần chạy đầu tiên nó sẽ hơi lâu vì phải tải model về
-model_name = "isnet-general-use" 
-session = new_session(model_name)
+st.set_page_config(page_title="App Xóa Phông", page_icon="✂️")
+st.title("✂️ Xóa Phông (Chế độ Tỉ mỉ)")
 
 uploaded_file = st.file_uploader("Chọn ảnh...", type=["jpg", "jpeg", "png"])
 
@@ -21,18 +17,25 @@ if uploaded_file is not None:
         st.header("Ảnh gốc")
         st.image(image, use_container_width=True)
 
-    with st.spinner('Đang dùng não xịn để tách...'):
-        # 2. Truyền cái session (bộ não) vào hàm remove
-        output_image = remove(image, session=session)
+    with st.spinner('Đang dò từng milimet...'):
+        # Bật chế độ Alpha Matting với thông số mạnh
+        output_image = remove(
+            image,
+            alpha_matting=True,
+            # Tăng độ gắt để giữ lại chi tiết (thử từ 200 -> 250)
+            alpha_matting_foreground_threshold=250,
+            # Giảm độ gắt nền để xóa sạch hơn (thử từ 0 -> 20)
+            alpha_matting_background_threshold=5,
+            # Co viền lại để tránh bị răng cưa
+            alpha_matting_erode_size=5
+        )
 
     with col2:
         st.header("Kết quả")
         st.image(output_image, use_container_width=True)
 
-    # Phần tải về giữ nguyên như cũ...
+    # (Phần nút tải về giữ nguyên...)
     buf = io.BytesIO()
     output_image.save(buf, format="PNG")
     byte_im = buf.getvalue()
-
-    st.download_button("Tải ảnh về", byte_im, "xoa_phong_isnet.png", "image/png")
-
+    st.download_button("Tải ảnh về", byte_im, "ket_qua.png", "image/png")
